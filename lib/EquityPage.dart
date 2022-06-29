@@ -1,6 +1,11 @@
+import 'package:account_project/MasterPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-import 'Login/HomePage.dart';
+import 'Firestore/User.dart';
+import 'HomePage.dart';
+
 class EquityPage extends StatefulWidget {
   const EquityPage({Key? key}) : super(key: key);
 
@@ -9,121 +14,178 @@ class EquityPage extends StatefulWidget {
 }
 
 class _EquityPageState extends State<EquityPage> {
-  var nameController = TextEditingController();
-  var queController = TextEditingController();
-  var descriptionController = TextEditingController();
+  var totalAmountController = TextEditingController();
+  var descController = TextEditingController();
+  TextEditingController dateinput = TextEditingController();
 
-  bool nameErr = false;
-  bool queErr = false;
-  bool descriptionErr = false;
+  @override
+  void initState() {
+    dateinput.text = "";
+    super.initState();
+  }
+
+  bool totalAmountErr = false;
+  bool dateErr = false;
+  bool descErr = false;
+
+  _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
+
+  String? dropdownValue = 'one';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        leading:
-        IconButton(onPressed: (){
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomePage()));
-        }, icon: Icon(Icons.arrow_back_ios)),
-        centerTitle: true,
-        title: Text('Equity'),
+        backgroundColor: Colors.white,
+        elevation: 0.0,
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (context) => HomePage()));
+            },
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: Colors.black,
+            )),
+        title: Text('Add New Equity',
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Poppins',
+                color: Colors.black)),
       ),
       body: SingleChildScrollView(
         child: Container(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Add New Details',
-                style: TextStyle(
-                    color: Colors.teal,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                  ),
-                  hintText: 'Expense Name',
-                  labelText: 'Name',
-                  errorText: nameErr ? 'Value can\'t Be Empty' : null,
-                ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              TextField(
-                controller: queController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter Quantity',
-                  labelText: 'Quantity',
-                  errorText: queErr ? 'Value can\'t Be Empty' : null,
-                ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter Description',
-                  labelText: 'Description',
-                  errorText: descriptionErr ? 'Value can\'t Be Empty' : null,
-                ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    style: TextButton.styleFrom(
-                        primary: Colors.white, backgroundColor: Colors.teal),
-                    onPressed: () async {
-                      setState(() {
-                        nameController.text.isEmpty
-                            ? nameErr = true
-                            : nameErr = false;
-                        queController.text.isEmpty
-                            ? queErr = true
-                            : queErr = false;
-                        descriptionController.text.isEmpty
-                            ? descriptionErr = true
-                            : descriptionErr = false;
-                      });
-                      if (nameErr == false &&
-                          queErr == false &&
-                          descriptionErr == false) {
+
+              Container(
+                  padding: EdgeInsets.all(15),
+                  height: 80,
+                  child: TextField(
+                    style: TextStyle(fontFamily: 'Poppins'),
+                    controller:
+                        dateinput, //editing controller of this TextField
+                    decoration: InputDecoration(
+                      // icon: Icon(Icons.calendar_today), //icon of text field
+                      labelText: "Select Date",
+                      labelStyle: TextStyle(fontFamily: 'Poppins'),
+                      errorText: dateErr
+                          ? 'Value can\'t Be Empty'
+                          : null, //label text of field
+                    ),
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2101));
+
+                      if (pickedDate != null) {
+                        print(pickedDate);
+                        String formattedDate =
+                            DateFormat('yyyy-MM-dd').format(pickedDate);
+                        print(formattedDate);
+
+                        setState(() {
+                          dateinput.text =
+                              formattedDate; //set output date to TextField value.
+                        });
+                      } else {
+                        print("Date is not selected");
                       }
                     },
-                    child: Text(
-                      'Add Details',
-                    ),
+                  )),
+              Padding(
+                padding: EdgeInsets.only(left: 15, right: 15),
+                child: TextField(
+                  style: TextStyle(fontFamily: 'Poppins'),
+                  controller: totalAmountController,
+                  decoration: InputDecoration(
+                    labelText: 'Amount',
+                    hintText: 'Income Amount',
+                    hintStyle: TextStyle(fontFamily: 'Poppins'),
+                    labelStyle: TextStyle(fontFamily: 'Poppins'),
+                    errorText: totalAmountErr ? 'Value can\'t Be Empty' : null,
                   ),
-                  SizedBox(
-                    width: 40,
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+
+              Padding(
+                padding: EdgeInsets.only(left: 15, right: 15),
+                child: TextField(
+                  style: TextStyle(fontFamily: 'Poppins'),
+                  controller: descController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    hintText: 'Description',
+                    hintStyle: TextStyle(fontFamily: 'Poppins'),
+                    labelStyle: TextStyle(fontFamily: 'Poppins'),
+                    errorText: descErr ? 'Value can\'t Be Empty' : null,
                   ),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                        primary: Colors.white, backgroundColor: Colors.red),
-                    onPressed: () {
-                      nameController.text = '';
-                      queController.text = '';
-                      descriptionController.text = '';
-                    },
-                    child: Text(
-                      'Clear Details',
-                    ),
-                  ),
-                ],
+                ),
+              ),
+              SizedBox(
+                height: 40,
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: RaisedButton(
+                      padding: EdgeInsets.all(10),
+                      elevation: (0.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      color: Colors.blue,
+                      onPressed: () {
+                        setState(() {
+                          totalAmountController.text.isEmpty
+                              ? totalAmountErr = true
+                              : totalAmountErr = false;
+                          descController.text.isEmpty
+                              ? descErr = true
+                              : descErr = false;
+                          dateinput.text.isEmpty
+                              ? dateErr = true
+                              : dateErr = false;
+                        });
+
+                        if (totalAmountErr == false &&
+                            descErr == false &&
+                            dateErr == false) {
+                          final user = User(
+                              totalAmount: totalAmountController.text,
+                              descpEquity: descController.text,
+                              date: dateinput.text);
+                          createUser(user);
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => HomePage()));
+                        }
+                      },
+                      child: Text('Add',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                              fontSize: 16))),
+                ),
               ),
             ],
           ),
@@ -131,5 +193,11 @@ class _EquityPageState extends State<EquityPage> {
       ),
     );
   }
-}
 
+  Future createUser(User user) async {
+    final docUser = FirebaseFirestore.instance.collection('Equity').doc();
+    user.id = docUser.id;
+    final json = user.equity();
+    await docUser.set(json);
+  }
+}

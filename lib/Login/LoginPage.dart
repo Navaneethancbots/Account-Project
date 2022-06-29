@@ -5,7 +5,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:account_project/Login/HomePage.dart';
+import 'package:account_project/HomePage.dart';
 import 'SignUpPage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -18,6 +18,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+
 
   GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
 
@@ -127,9 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             color: Colors.blue,
 
-                            onPressed: ()  {
-
-                              setState(() async {
+                            onPressed: ()  async{
 
                                 _emailController.text.isEmpty ? _emailValue = true : _emailValue = false;
 
@@ -214,8 +213,6 @@ class _LoginPageState extends State<LoginPage> {
 
                                 }
 
-
-                              });
 
                             },
                             child:

@@ -1,7 +1,10 @@
- import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:account_project/MasterAddPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'Login/HomePage.dart';
+import 'Firestore/User.dart';
+import 'HomePage.dart';
+
 class MasterPage extends StatefulWidget {
   const MasterPage({Key? key}) : super(key: key);
 
@@ -10,186 +13,109 @@ class MasterPage extends StatefulWidget {
 }
 
 class _MasterPageState extends State<MasterPage> {
-  var nameController = TextEditingController();
-  var queController = TextEditingController();
-  var descriptionController = TextEditingController();
 
-  bool nameErr = false;
-  bool dropdownErr = false;
-  bool descriptionErr = false;
+  List<String> items = [];
 
   String? dropdownValue ;
-
-
-  _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0.0,
-        leading:
-        IconButton(onPressed: (){
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomePage()));
-        }, icon: Icon(Icons.arrow_back_ios,color: Colors.black,)),
-        title: Text('Add New Master',style: TextStyle(fontSize: 20
-            ,fontWeight: FontWeight.w800 ,fontFamily: 'Poppins',color: Colors.black)),
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (context) => HomePage()));
+            },
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: Colors.black,
+            )),
+        title: Text('Master',
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Poppins',
+                color: Colors.black)),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 25),
+            child: IconButton(onPressed:()async{
+              final instance = FirebaseFirestore.instance;
+              final batch = instance.batch();
+              var collection = instance.collection('master_expenses');
+              var snapshots = await collection.get();
+              for (var doc in snapshots.docs) {
+                batch.delete(doc.reference);
+              }
+              await batch.commit();
+
+            }, icon:Icon(Icons.delete,color: Colors.black,)),
+          )
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: 15,right: 15),
-                child: TextField(
-                  style: TextStyle(fontFamily: 'Poppins'),
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Expense Name',
-                    hintText: 'Expense Name',
-                    hintStyle:  TextStyle(fontFamily: 'Poppins'),
-                    labelStyle: TextStyle(fontFamily: 'Poppins'),
-                    errorText: nameErr ? 'Value can\'t Be Empty' : null,
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 40,
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 15,right: 15),
-                child:DropdownButton<String>(
-
-                  alignment: Alignment.topLeft,
-                  hint: Container(
-                    child:Padding(
-                      padding: const EdgeInsets.only(bottom: 25),
-                      child: Text(
-                      "Select Item Type",
-                      style: TextStyle(color: Colors.black54,fontFamily: 'Poppins',fontSize: 16,),
-
-                  ),
-                    ),),                     //and here
-                  isExpanded: true,
-                  value: dropdownValue,
-                  icon: const Icon(Icons.arrow_drop_down_sharp),
-                  style: const TextStyle(color: Colors.black,fontFamily: 'Poppins',fontSize: 16),
-                  underline: Container(
-                    height: 1,
-                    color: Colors.black38,
-
-                  ),
-                  onChanged: (String? newValue) {
-
-                    setState(
-                            () {
-                      dropdownValue = newValue!;
-                    });
-                  },
-                  items: <String>['Ltr', 'Nos', 'Kg',]
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                      alignment: Alignment.topLeft,
-                    );
-                  }).toList(),
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-
-              Padding(
-                padding: EdgeInsets.only(left: 15,right: 15),
-                child: TextField(
-                  style: TextStyle(fontFamily: 'Poppins'),
-                  controller: descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'Description',
-                    hintText: 'Description',
-                    hintStyle:  TextStyle(fontFamily: 'Poppins'),
-                    labelStyle: TextStyle(fontFamily: 'Poppins'),
-                    errorText: descriptionErr ? 'Value can\'t Be Empty' : null,
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 40,
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: RaisedButton(
-                      padding: EdgeInsets.all(10),
-                      elevation: (0.0),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10),
-                      ),
-                      color: Colors.blue,
-
-                      onPressed: ()  {
-                        setState(() {
-                          nameController.text.isEmpty ? nameErr = true : nameErr = false;
-                          descriptionController.text.isEmpty ? descriptionErr = true : descriptionErr = false;
-                          if(nameController.text.isNotEmpty && descriptionController.text.isNotEmpty && dropdownValue == null){
-                            _showSuccessSnackBar('select',);
-                          }
-                        });
-
-                        if (nameErr == false && descriptionErr == false && dropdownValue != null){
-                          final user = User(expenseName: nameController.text, Mesure: dropdownValue, decription: descriptionController.text);
-                          createUser(user);
-                        }
-
-                      },
-                      child:
-                      Text('Add Details',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontFamily: 'Poppins',fontSize: 16))),
-                ),
-              ),
-            ],
-          ),
+      body:
+      StreamBuilder<List<User>>(
+        stream: readUsers(),
+        builder: (context, snapsot) {
+          if (snapsot.hasError) {
+            return Text('Something went wrong! ${snapsot.error}');
+          } else if (snapsot.hasData) {
+            final masterexpenses = snapsot.data!;
+            return ListView(
+              children: masterexpenses.map(buildUser).toList(),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        }
+      ),
+      floatingActionButton: FloatingActionButton(
+        elevation: 0.0,
+        backgroundColor: Colors.white,
+        onPressed: () {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => MasterAddPage()));
+        },
+        child: Icon(
+          Icons.add,
+          color: Colors.black,
         ),
       ),
     );
   }
-  Future createUser(User user)async{
-    final docUser = FirebaseFirestore.instance.collection('Account').doc();
 
-    user.id = docUser.id;
+  Widget buildUser(User user) =>
+  ListTile(
+        leading: CircleAvatar(
+           child: Text((user.expenseName.toString()[0].toUpperCase()),style: TextStyle(fontFamily: 'Poppins',fontSize: 20) ),
 
-    final json = user.toJson();
+        ),
+        title: Text(user.expenseName.toString(),style: TextStyle(fontFamily: 'Poppins',)),
+        subtitle: Text(user.decription.toString(),style: TextStyle(fontFamily: 'Poppins',)),
+        trailing: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(onPressed: (){
+                print("id delete ${user.id}");
+                final docUser = FirebaseFirestore.instance.collection('master_expenses').doc(user.id);
+                docUser.delete();
+              }, icon: Icon(Icons.delete)),
+            ],
+          ),
+        ),
+  );
 
-    await docUser.set(json);
-  }
+  Stream<List<User>> readUsers() => FirebaseFirestore.instance
+      .collection('master_expenses')
+      .snapshots()
+      .map((snapshot) =>
+          snapshot.docs.map((doc) => User.fromJson(doc.data())).toList());
 }
- class User{
-   String? id;
-   String? expenseName;
-   String? Mesure;
-   String? decription;
-
-   User({
-     this.id ,
-     required this.expenseName,
-     required this.Mesure,
-     required this.decription,
-   });
-   Map<String,dynamic> toJson() =>{
-     'id' : id,
-     'expenseName' : expenseName,
-     'Mesure' : Mesure,
-     'decription' : decription,
-
-   };
- }

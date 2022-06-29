@@ -40,6 +40,8 @@ dependencies:
   fluentui_system_icons: ^1.1.170
   fluttertoast: ^8.0.9
   cloud_firestore: ^3.1.18
+  intl: ^0.17.0-nullsafety.2
+  flutter_speed_dial: ^3.0.5
 
 
 dev_dependencies:
