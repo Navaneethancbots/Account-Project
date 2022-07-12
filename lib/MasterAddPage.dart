@@ -1,9 +1,8 @@
- import 'package:account_project/MasterPage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:account_project/MasterPage.dart';
 import 'package:flutter/material.dart';
+import 'Firestore/Accounts.dart';
+import 'FirestoreCRUD.dart';
 
-import 'Firestore/User.dart';
-import 'HomePage.dart';
 class MasterAddPage extends StatefulWidget {
   const MasterAddPage({Key? key}) : super(key: key);
 
@@ -12,16 +11,15 @@ class MasterAddPage extends StatefulWidget {
 }
 
 class _MasterAddPageState extends State<MasterAddPage> {
-  var nameController = TextEditingController();
-  var queController = TextEditingController();
-  var descriptionController = TextEditingController();
 
-  bool nameErr = false;
-  bool dropdownErr = false;
-  bool descriptionErr = false;
+  var masterNameController = TextEditingController();
+  var masterDescriptionController = TextEditingController();
 
-  String? dropdownValue ;
+  bool masterNameErr = false;
+  bool masterUOMErr = false;
+  bool masterDescriptionErr = false;
 
+  String? masterUOM;
 
   _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -36,14 +34,23 @@ class _MasterAddPageState extends State<MasterAddPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.deepPurple,
         elevation: 0.0,
-        leading:
-        IconButton(onPressed: (){
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>MasterPage()));
-        }, icon: Icon(Icons.arrow_back_ios,color: Colors.black,)),
-        title: Text('Add New Master',style: TextStyle(fontSize: 20
-            ,fontWeight: FontWeight.w800 ,fontFamily: 'Poppins',color: Colors.black)),
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => MasterPage()));
+            },
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: Colors.white,
+            )),
+        title: Text('Add New Master',
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'Poppins',
+                color: Colors.white)),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -52,16 +59,18 @@ class _MasterAddPageState extends State<MasterAddPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: EdgeInsets.only(left: 15,right: 15),
+                padding: EdgeInsets.only(left: 15, right: 15),
                 child: TextField(
+                  cursorColor: Colors.deepPurple,
                   style: TextStyle(fontFamily: 'Poppins'),
-                  controller: nameController,
+                  controller: masterNameController,
                   decoration: InputDecoration(
+                    focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.deepPurple)
+                    ),
                     labelText: 'Expense Name',
-                    hintText: 'Expense Name',
-                    hintStyle:  TextStyle(fontFamily: 'Poppins'),
-                    labelStyle: TextStyle(fontFamily: 'Poppins'),
-                    errorText: nameErr ? 'Value can\'t Be Empty' : null,
+                    labelStyle: TextStyle(fontFamily: 'Poppins',color: Colors.deepPurple),
+                    errorText: masterNameErr ? 'Value can\'t Be Empty' : null,
                   ),
                 ),
               ),
@@ -69,37 +78,41 @@ class _MasterAddPageState extends State<MasterAddPage> {
                 height: 40,
               ),
               Padding(
-                padding: EdgeInsets.only(left: 15,right: 15),
-                child:DropdownButton<String>(
-
+                padding: EdgeInsets.only(left: 15, right: 15),
+                child: DropdownButton<String>(
                   alignment: Alignment.topLeft,
                   hint: Container(
-                    child:Padding(
+                    child: Padding(
                       padding: const EdgeInsets.only(bottom: 25),
                       child: Text(
-                      "Select Item Type",
-                      style: TextStyle(color: Colors.black54,fontFamily: 'Poppins',fontSize: 16,),
-
-                  ),
-                    ),),                     //and here
+                        "UOM",
+                        style: TextStyle(
+                          color: Colors.deepPurple,
+                          fontFamily: 'Poppins',
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ), //and here
                   isExpanded: true,
-                  value: dropdownValue,
+                  value: masterUOM,
                   icon: const Icon(Icons.arrow_drop_down_sharp),
-                  style: const TextStyle(color: Colors.black,fontFamily: 'Poppins',fontSize: 16),
+                  style: const TextStyle(
+                      color: Colors.black, fontFamily: 'Poppins', fontSize: 16),
                   underline: Container(
                     height: 1,
                     color: Colors.black38,
-
                   ),
                   onChanged: (String? newValue) {
-
-                    setState(
-                            () {
-                      dropdownValue = newValue!;
+                    setState(() {
+                      masterUOM = newValue!;
                     });
                   },
-                  items: <String>['Ltr', 'Nos', 'Kg',]
-                      .map<DropdownMenuItem<String>>((String value) {
+                  items: <String>[
+                    'Ltr',
+                    'Nos',
+                    'Kg',
+                  ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -111,18 +124,19 @@ class _MasterAddPageState extends State<MasterAddPage> {
               SizedBox(
                 height: 10,
               ),
-
               Padding(
-                padding: EdgeInsets.only(left: 15,right: 15),
+                padding: EdgeInsets.only(left: 15, right: 15),
                 child: TextField(
+                  cursorColor: Colors.deepPurple,
                   style: TextStyle(fontFamily: 'Poppins'),
-                  controller: descriptionController,
+                  controller: masterDescriptionController,
                   decoration: InputDecoration(
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.deepPurple)
+                    ),
                     labelText: 'Description',
-                    hintText: 'Description',
-                    hintStyle:  TextStyle(fontFamily: 'Poppins'),
-                    labelStyle: TextStyle(fontFamily: 'Poppins'),
-                    errorText: descriptionErr ? 'Value can\'t Be Empty' : null,
+                    labelStyle: TextStyle(fontFamily: 'Poppins',color: Colors.deepPurple),
+                    errorText: masterDescriptionErr ? 'Value can\'t Be Empty' : null,
                   ),
                 ),
               ),
@@ -136,28 +150,47 @@ class _MasterAddPageState extends State<MasterAddPage> {
                   child: RaisedButton(
                       padding: EdgeInsets.all(10),
                       elevation: (0.0),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      color: Colors.blue,
-
-                      onPressed: ()  {
+                      color: Colors.pink[200],
+                      onPressed: () {
                         setState(() {
-                          nameController.text.isEmpty ? nameErr = true : nameErr = false;
-                          descriptionController.text.isEmpty ? descriptionErr = true : descriptionErr = false;
-                          if(nameController.text.isNotEmpty && descriptionController.text.isNotEmpty && dropdownValue == null){
-                            _showSuccessSnackBar('select',);
+                          masterNameController.text.isEmpty
+                              ? masterNameErr = true
+                              : masterNameErr = false;
+                          masterDescriptionController.text.isEmpty
+                              ? masterDescriptionErr = true
+                              : masterDescriptionErr = false;
+                          if (masterNameController.text.isNotEmpty &&
+                              masterDescriptionController.text.isNotEmpty &&
+                              masterUOM == null) {
+                            _showSuccessSnackBar(
+                              'select Item Type',
+                            );
                           }
                         });
 
-                        if (nameErr == false && descriptionErr == false && dropdownValue != null){
-                          final user = User(expenseName: nameController.text, Mesure: dropdownValue, decription: descriptionController.text);
-                          createUser(user);
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>MasterPage()));
+                        if (masterNameErr == false &&
+                            masterDescriptionErr == false &&
+                            masterUOM != null) {
+                          final user = Accounts(
+                              masterName: masterNameController.text,
+                              masterUOM: masterUOM,
+                              masterDescription: masterDescriptionController.text);
+                              createMaster(user,"master_expenses");
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => MasterPage()));
                         }
-
                       },
-                      child:
-                      Text('Add',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontFamily: 'Poppins',fontSize: 16))),
+                      child: Text('Add',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins',
+                              fontSize: 16))),
                 ),
               ),
             ],
@@ -167,11 +200,5 @@ class _MasterAddPageState extends State<MasterAddPage> {
     );
   }
 
-  Future createUser(User user)async{
-    final docUser = FirebaseFirestore.instance.collection('master_expenses').doc();
-    user.id = docUser.id;
-    final json = user.toJson();
-    await docUser.set(json);
-  }
-}
 
+}

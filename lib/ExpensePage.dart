@@ -1,96 +1,101 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-import 'Firestore/User.dart';
+import 'Decimal values.dart';
+import 'Firestore/Accounts.dart';
 
+import 'FirestoreCRUD.dart';
 import 'HomePage.dart';
 
 class ExpensePage extends StatefulWidget {
-
   const ExpensePage({Key? key}) : super(key: key);
 
   @override
   _ExpensePageState createState() => _ExpensePageState();
-
 }
 
 class _ExpensePageState extends State<ExpensePage> {
 
-  final measureValueController = TextEditingController();
 
-  final itemAmountController = TextEditingController();
-
-  final totalController = TextEditingController();
-
-  bool measureErr = false;
-  bool itemAmountErr = false;
-
-  String? dropdownValue;
-
-  var basic = 0, other = 0, sum = 0;
-
-  void initState() {
-
-    itemAmountController.addListener(() {
-
-      totalController.text = (int.parse(itemAmountController.text) *
-              int.parse(measureValueController.text))
-          .toString();
-
-    });
-
-    super.initState();
-
+  _selectDate(BuildContext context) async {
+    final DateTime? selected = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2010),
+      lastDate: DateTime(2025),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.amberAccent,
+              onPrimary: Colors.redAccent,
+              onSurface: Colors.blueAccent,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                primary: Colors.red, // button text color
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
   }
 
+  final expenseMeasureController = TextEditingController();
+
+  final expenseAmountController = TextEditingController();
+
+  final expenseTotalAmountController = TextEditingController();
+
+  final expenseDate = TextEditingController();
+
+  bool expenseMeasureErr = false;
+  bool expenseAmountErr = false;
+  bool expenseDateErr = false;
+
+  String? expenseSelectItem ;
+
+  int? expenseTotalAmount;
+
   _showSuccessSnackBar(String message) {
-
     ScaffoldMessenger.of(context).showSnackBar(
-
       SnackBar(
-
         content: Text(message),
-
       ),
-
     );
-
+  }
+  @override
+  void initState() {
+    expenseTotalAmountController.text;
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       backgroundColor: Colors.white,
-
       appBar: AppBar(
-
-        backgroundColor: Colors.white,
-
+        backgroundColor: Colors.deepPurple,
         elevation: 0.0,
-
         leading: IconButton(
-
             onPressed: () {
-
               Navigator.pushReplacement(
-
                   context, MaterialPageRoute(builder: (context) => HomePage()));
-
             },
             icon: Icon(
               Icons.arrow_back_ios,
-              color: Colors.black,
+              color: Colors.white,
             )),
-        title: Text('Expense',
+        title: Text('Add New Expense',
             style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
                 fontFamily: 'Poppins',
-                color: Colors.black)),
+                color: Colors.white)),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -100,48 +105,91 @@ class _ExpensePageState extends State<ExpensePage> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 15, right: 15),
-                child: StreamBuilder<List<User>>(
-                    stream: readUsers(),
+                child: TextField(
+                  style: TextStyle(fontFamily: 'Poppins'),
+                  controller:
+                  expenseDate, //editing controller of this TextField
+                  decoration: InputDecoration(
+                    focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.deepPurple)
+                    ),
+                    suffixIcon: IconButton(onPressed: ()async{
+                      DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2101));
+                      if (pickedDate != null) {
+                        print(pickedDate);
+                        String formattedDate =
+                        DateFormat('yyyy-MM-dd').format(pickedDate);
+                        print(formattedDate);
+
+                        setState(() {
+                          expenseDate.text =
+                              formattedDate; //set output date to TextField value.
+                        });
+                      } else {
+                        print("Date is not selected");
+                      }
+                    },icon: Icon(Icons.calendar_today,color: Colors.deepPurple,),),
+                    // icon: Icon(Icons.calendar_today), //icon of text field
+                    labelText: "Select Date",
+                    labelStyle: TextStyle(fontFamily: 'Poppins',color: Colors.deepPurple),
+                    errorText: expenseDateErr
+                        ? 'Value can\'t Be Empty'
+                        : null, //label text of field
+                  ),
+                  readOnly: true,
+                ),
+              ),
+
+              SizedBox(
+                height: 30,
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(left: 15, right: 15),
+                child: StreamBuilder<List<Accounts>>(
+                    stream: read('master_expenses'),
                     builder: (context, snapsot) {
                       if (snapsot.hasError) {
                         return Text('Something went wrong! ${snapsot.error}');
                       } else if (snapsot.hasData) {
-
-                        final master_expenses = snapsot.data!;
-
+                        final Expenses = snapsot.data!;
                         return DropdownButton<String>(
                           alignment: Alignment.topLeft,
                           hint: Container(
                             child: Padding(
                               padding: const EdgeInsets.only(bottom: 25),
-                              child: Text("Select item",
+                              child: Text("Select Expense",
                                   style: TextStyle(
-                                    color: Colors.black54,
+                                    color: Colors.deepPurple,
                                     fontFamily: 'Poppins',
                                     fontSize: 17,
                                   )),
                             ),
                           ),
-                          isExpanded:true,
-                          value: dropdownValue,
+                          isExpanded: true,
+                          value: expenseSelectItem,
                           icon: const Icon(Icons.arrow_drop_down_sharp),
                           style: const TextStyle(
                               color: Colors.black,
                               fontFamily: 'Poppins',
                               fontSize: 16),
                           underline: Container(
-                            height: 0,
+                            height: 1,
                             color: Colors.black38,
                           ),
                           onChanged: (newValue) {
                             setState(() {
-                              dropdownValue = newValue;
+                              expenseSelectItem = newValue;
                             });
                           },
-                          items: master_expenses.map((e) {
+                          items: Expenses.map((e) {
                             return DropdownMenuItem<String>(
-                              value: e.expenseName,
-                              child: Text(e.expenseName.toString()),
+                              value: e.masterName,
+                              child: Text(e.masterName.toString()),
                               alignment: Alignment.topLeft,
                             );
                           }).toList(),
@@ -156,16 +204,17 @@ class _ExpensePageState extends State<ExpensePage> {
               Padding(
                 padding: EdgeInsets.only(left: 15, right: 15),
                 child: TextField(
+                  cursorColor: Colors.deepPurple,
                   keyboardType: TextInputType.number,
                   style: TextStyle(fontFamily: 'Poppins'),
-                  controller: measureValueController,
-                  onSubmitted: (String value) {},
+                  controller: expenseMeasureController,
                   decoration: InputDecoration(
-                    labelText: 'Measure Value',
-                    hintText: 'Measure Value',
-                    hintStyle: TextStyle(fontFamily: 'Poppins'),
-                    labelStyle: TextStyle(fontFamily: 'Poppins'),
-                    errorText: measureErr ? 'Value can\'t Be Empty' : null,
+                    focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.deepPurple)
+                    ),
+                    labelText: 'Qty',
+                    labelStyle: TextStyle(fontFamily: 'Poppins',color: Colors.deepPurple),
+                    errorText: expenseMeasureErr ? 'Value can\'t Be Empty' : null,
                   ),
                 ),
               ),
@@ -175,50 +224,47 @@ class _ExpensePageState extends State<ExpensePage> {
               Padding(
                 padding: EdgeInsets.only(left: 15, right: 15),
                 child: TextField(
+                  cursorColor: Colors.deepPurple,
+                 // inputFormatters:[ThousandsSeparatorInputFormatter()],
                   keyboardType: TextInputType.number,
                   style: TextStyle(fontFamily: 'Poppins'),
-                  controller: itemAmountController,
-                  onChanged: (value){
-
-                   setState(() {
-
-                      itemAmountController.addListener(() {
-
-                        totalController.text = (int.parse(value.toString()) * int.parse(measureValueController.text)).toString();
-
-
+                  controller: expenseAmountController,
+                  onChanged: (value) {
+                    setState(() {
+                      expenseAmountController.addListener(() {
+                        expenseTotalAmountController.text = (int.parse(value.toString()) *
+                            int.parse(expenseMeasureController.text)).toString();
                       });
-
                     });
-
                   },
-                  onSubmitted: (String value) {},
                   decoration: InputDecoration(
-                    labelText: 'Amount',
-                    hintText: 'one quantity Amount',
-                    hintStyle: TextStyle(fontFamily: 'Poppins'),
-                    labelStyle: TextStyle(fontFamily: 'Poppins'),
-                    errorText: itemAmountErr ? 'Value can\'t Be Empty' : null,
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.deepPurple)
+                    ),
+                    prefix: Text(Currency,style:TextStyle(color: Colors.black,fontSize: 16),),
+                    labelText: 'Base Rate',
+                    labelStyle: TextStyle(fontFamily: 'Poppins',color: Colors.deepPurple),
+                    errorText: expenseAmountErr ? 'Value can\'t Be Empty' : null,
                   ),
                 ),
               ),
-              SizedBox(
-                height: 10,
-              ),
+
               Padding(
                 padding: EdgeInsets.only(left: 15, right: 15),
                 child: TextField(
+                 // inputFormatters:[ThousandsSeparatorInputFormatter()],
                   enabled: false,
-                  style: TextStyle(fontFamily: 'Poppins'),
-                  controller: totalController,
-                  onSubmitted: (String value) {},
+                  style: TextStyle(fontFamily: 'Poppins',color: Colors.black,fontSize: 20),
+                  controller: expenseTotalAmountController,
                   decoration: InputDecoration(
+                    prefix: Text(Currency,style:TextStyle(color: Colors.black,fontSize: 16),),
                     labelText: 'Total Amount',
-                    labelStyle: TextStyle(fontFamily: 'Poppins',color: Colors.black54),
+                    labelStyle:
+                        TextStyle(fontFamily: 'Poppins', color: Colors.deepPurple),
                   ),
                 ),
               ),
-
+              //Text(expenseTotalAmountController.text.toString()),
               SizedBox(
                 height: 20,
               ),
@@ -232,24 +278,40 @@ class _ExpensePageState extends State<ExpensePage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      color: Colors.blue,
+                      color: Colors.pink[200],
                       onPressed: () {
                         setState(() {
-                          measureValueController.text.isEmpty
-                              ? measureErr = true
-                              : measureErr = false;
-                          itemAmountController.text.isEmpty
-                              ? itemAmountErr = true
-                              : itemAmountErr = false;
-                          if(measureValueController.text.isNotEmpty && itemAmountController.text.isNotEmpty && dropdownValue == null){
-                            _showSuccessSnackBar('Select Item');
+                          expenseMeasureController.text.isEmpty
+                              ? expenseMeasureErr = true
+                              : expenseMeasureErr = false;
+                          expenseDate.text.isEmpty
+                              ? expenseDateErr = true
+                              : expenseDateErr = false;
+                          expenseAmountController.text.isEmpty
+                              ? expenseAmountErr = true
+                              : expenseAmountErr = false;
+                          if (expenseMeasureController.text.isNotEmpty &&
+                              expenseAmountController.text.isNotEmpty &&
+                              expenseSelectItem == null) {
+                            _showSuccessSnackBar('Select Expense');
                           }
                         });
 
-                        if (measureErr == false && itemAmountErr == false && dropdownValue != null){
-                          final user = User(selectItem: dropdownValue,measurement: measureValueController.text,Amount: totalController.text);
-                          createUser(user);
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomePage()));
+                        if (expenseMeasureErr == false &&
+                            expenseAmountErr == false &&
+                            expenseDateErr == false &&
+                            expenseSelectItem != null) {
+                          final user = Accounts(
+                              expenseSelectItem: expenseSelectItem,
+                              expenseDate: expenseDate.text,
+                              expenseMeasure: expenseMeasureController.text,
+                              expenseAmount: double.tryParse (expenseAmountController.text),
+                              expenseTotalAmount:double.tryParse(expenseTotalAmountController.text));
+                          createMaster(user,"Expense");
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => HomePage()));
                         }
                       },
                       child: Text('Add',
@@ -266,23 +328,13 @@ class _ExpensePageState extends State<ExpensePage> {
       ),
     );
   }
-  
-  Future createUser(User user) async {
-    
-    final docUser = FirebaseFirestore.instance.collection('Expense').doc();
-
-    user.id = docUser.id;
-
-    final json = user.Expense();
-
-    await docUser.set(json);
+  getData(myId) async{
+    QuerySnapshot response1  = await FirebaseFirestore.instance.collection("master_expenses").where('id',isEqualTo: myId ).get();
+    QuerySnapshot response2 = await FirebaseFirestore.instance.collection("Expense").where('id',isEqualTo: myId ).get();
+    List<DocumentSnapshot> list1 = response1.docs;
+    list1.addAll(response2.docs);
+    print('${list1}');
+    return list1;
   }
-  
-  Stream<List<User>> readUsers() {
-    return FirebaseFirestore.instance
-        .collection('master_expenses')
-        .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => User.fromJson(doc.data())).toList());
-  }
+
 }
